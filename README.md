@@ -16,6 +16,8 @@ A beautiful, open-source, **CPU-only** real-time speech-to-text app for your ter
 
 ## Features
 
+**Built on top of [RealtimeSTT](https://github.com/KoljaB/RealtimeSTT).**
+
 - **Real-time streaming** — words appear as you speak (like watching an LLM type)
 - **Full transcription** — partial text streams in, then the full sentence locks in when you pause
 - **CPU-only** — no GPU required, runs on any laptop
@@ -107,3 +109,7 @@ Default model: `base` (~150 MB, ~1 GB RAM, great accuracy for English).
 ## License
 
 MIT
+
+## Acknowledgement
+
+* [RealtimeSTT](https://github.com/KoljaB/RealtimeSTT)
