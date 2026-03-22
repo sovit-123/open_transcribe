@@ -1,0 +1,21 @@
+# Core Speech-to-Text
+# faster-whisper==1.1.1
+realtimestt==0.3.104
+
+# Audio Processing
+sounddevice==0.4.6
+numpy==1.26.4
+webrtcvad==2.0.10
+
+# UI & Terminal
+textual==0.70.0
+rich==13.7.0
+
+# Configuration & Utilities
+pydantic==2.5.3
+python-dotenv==1.0.0
+
+# Optional: For better performance
+ctranslate2>=3.24.0
+
+requests==2.32.5
