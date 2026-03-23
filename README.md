@@ -1,15 +1,15 @@
 # Open Transcribe
 
-A beautiful, open-source, **CPU-only** real-time speech-to-text app for your terminal — inspired by [Wispr Flow](https://wisprflow.ai).
+A beautiful, open-source, **CPU-only** real-time speech-to-text app for your terminal - inspired by [Wispr Flow](https://wisprflow.ai).
 
 ```
-┌─ Open Transcribe ─────────────────────────────────────────────┐
+┌─ Open Transcribe ────────────────────────────────────────┐
 │  ● LISTENING — speak now                                 │
 ├──────────────────────────────────────────────────────────┤
 │  The quick brown fox jumps over▌                         │  ← live streaming
 ├──────────────────────────────────────────────────────────┤
 │  14:02:31  The quick brown fox jumps over the lazy dog.  │  ← locked-in
-│  14:02:28  Hello world, this is Open Transcribe.              │
+│  14:02:28  Hello world, this is Open Transcribe.         │
 │  14:02:25  ✓ Model loaded.  Press R to begin.            │
 └──────────────────────────────────────────────────────────┘
 ```
@@ -18,12 +18,12 @@ A beautiful, open-source, **CPU-only** real-time speech-to-text app for your ter
 
 **Built on top of [RealtimeSTT](https://github.com/KoljaB/RealtimeSTT).**
 
-- **Real-time streaming** — words appear as you speak (like watching an LLM type)
-- **Full transcription** — partial text streams in, then the full sentence locks in when you pause
-- **CPU-only** — no GPU required, runs on any laptop
-- **Cross-platform** — Windows, macOS, Linux
-- **Gorgeous TUI** — dark theme terminal UI built with Textual
-- **Minimal footprint** — ~150 MB model download, low RAM usage
+- **Real-time streaming** - words appear as you speak (like watching an LLM type)
+- **Full transcription** - partial text streams in, then the full sentence locks in when you pause
+- **CPU-only** - no GPU required, runs on any laptop
+- **Cross-platform** - Windows, macOS, Linux
+- **Gorgeous TUI** - dark theme terminal UI built with Textual
+- **Minimal footprint** - ~150 MB model download, low RAM usage
 
 ## Quick Start
 
@@ -31,17 +31,21 @@ A beautiful, open-source, **CPU-only** real-time speech-to-text app for your ter
 # 1. Clone & enter
 cd open_transcribe
 
+
 # 2. Create a virtual environment
 python -m venv stt_env
+
 
 # 3. Activate it
 #    Windows:
 stt_env\Scripts\activate
+pip install -r requirements.txt
+
 #    macOS / Linux: (Can skip the following on Windows and directly do pip install -r requirements.txt)
 source stt_env/bin/activate
 sudo brew install portaudio # macOS 
-sudo apt-get update # Linux
-sudo apt-get install python3-dev portaudio19-dev # Linux
+sudo apt-get update && sudo apt-get install python3-dev portaudio19-dev # Linux
+
 
 # 4. Install dependencies
 pip install -r requirements.txt
@@ -72,14 +76,6 @@ python examples/minimal_streaming.py
 ```
 
 Prints streaming partials and final sentences directly in your terminal. Great for debugging or piping output.
-
-### Super Simple (bare-bones test)
-
-```bash
-python examples/super_simple.py
-```
-
-Absolute minimum script — useful to verify your microphone and model work before using the TUI.
 
 ## Architecture
 

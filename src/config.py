@@ -17,7 +17,7 @@ class Config:
     # distil-medium.en, large-v1,
     # large-v2, large-v3, large, distil-large-v2, 
     # distil-large-v3, large-v3-turbo, or turbo)
-    model: str = "small.en"
+    model: str = "base"
     language: str = "en"
     device: Literal["cpu", "cuda"] = "cuda"
     compute_type: str = "float32"

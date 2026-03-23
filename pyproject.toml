@@ -12,16 +12,15 @@ authors = [
     {name = "Open Transcribe Contributors"}
 ]
 
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
-    "faster-whisper>=1.0.0",
-    "realtimestt>=0.0.12",
-    "sounddevice>=0.4.0",
-    "numpy>=1.24.0",
+    "realtimestt>=0.3.104",
+    "sounddevice>=0.4.6",
+    "numpy>=1.26.4",
     "webrtcvad>=2.0.10",
     "textual>=0.70.0",
-    "rich>=13.0.0",
-    "pydantic>=2.0.0",
+    "rich>=13.7.0",
+    "pydantic>=2.5.3",
     "python-dotenv>=1.0.0",
 ]
 
@@ -33,12 +32,12 @@ dev = [
 ]
 
 [project.urls]
-Repository = "https://github.com/yourusername/open-transcribe"
-Issues = "https://github.com/yourusername/open-transcribe/issues"
+Repository = "https://github.com/sovit-123/open_transcribe"
+Issues = "https://github.com/sovit-123/open_transcribe/issues"
 
 [tool.black]
 line-length = 100
-target-version = ["py39", "py310", "py311"]
+target-version = ["py310", "py311", "py312"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
