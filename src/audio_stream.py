@@ -1,6 +1,5 @@
 """Audio streaming engine using RealtimeSTT.
 
-This is the proven-working configuration (tested via super_simple.py).
 Only parameters that RealtimeSTT actually accepts are used.
 """
 
@@ -12,7 +11,7 @@ from src.config import Config
 
 
 class AudioStream:
-    """Real-time audio capture → transcription via RealtimeSTT.
+    """Real-time audio capture => transcription via RealtimeSTT.
 
     Provides two callback streams:
         on_realtime:  partial text while you are still speaking (streaming)

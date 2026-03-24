@@ -31,4 +31,3 @@ class Config:
 
     def summary(self) -> str:
         return f"model={self.model}  device={self.device}  compute={self.compute_type}"
-

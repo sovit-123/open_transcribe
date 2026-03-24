@@ -1,13 +1,13 @@
-"""Open Transcribe — a gorgeous real-time speech-to-text TUI.
+"""Open Transcribe - a gorgeous real-time speech-to-text TUI.
 
 Two-panel design:
   • Top: live streaming partial text (grey, updating as you speak)
   • Bottom: finalized transcript log (green, locked-in sentences)
 
 Key bindings:
-  r / Space  — toggle listening on/off
-  c          — clear transcript
-  q          — quit
+  r / Space  - toggle listening on/off
+  c          - clear transcript
+  q          - quit
 """
 
 from __future__ import annotations
