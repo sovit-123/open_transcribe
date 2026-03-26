@@ -5,9 +5,10 @@
 # _posixsubprocess.fork_exec(), which validates them and raises ValueError.
 # Patch fork_exec() directly to filter out stale FDs (arg index 3).
 import os as _os
-import _posixsubprocess
+if _os.name == "posix":
+    import _posixsubprocess
 
-_orig_fork_exec = _posixsubprocess.fork_exec
+    _orig_fork_exec = _posixsubprocess.fork_exec
 
 def _safe_fork_exec(*args):
     args = list(args)
@@ -23,7 +24,8 @@ def _is_valid_fd(fd):
     except (OSError, ValueError):
         return False
 
-_posixsubprocess.fork_exec = _safe_fork_exec
+if _os.name == "posix":
+    _posixsubprocess.fork_exec = _safe_fork_exec
 # ── End workaround ────────────────────────────────────────────────────
 
 import sys
