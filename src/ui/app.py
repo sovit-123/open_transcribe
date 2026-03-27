@@ -17,14 +17,28 @@ from datetime import datetime
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
-from textual.containers import Vertical
+from textual.containers import Horizontal, Vertical
 from textual.reactive import reactive
-from textual.widgets import Footer, Header, Static, RichLog
+from textual.widgets import Button, Footer, Header, RichLog, Select, Static
 from textual import work
 from rich.text import Text
 
 from src.config import Config
 from src.audio_stream import AudioStream
+
+
+SAFE_MODELS = [
+    "tiny",
+    "tiny.en",
+    "base",
+    "base.en",
+    "small",
+    "small.en",
+    "medium",
+    "medium.en",
+    "large-v3",
+    "large-v3-turbo",
+]
 
 
 # ── Widgets ──────────────────────────────────────────────────────────────
@@ -80,6 +94,10 @@ class TranscribeApp(App):
         background: #0e0e12;
     }
 
+    #body {
+        height: 1fr;
+    }
+
     #mic {
         dock: top;
         height: 3;
@@ -94,6 +112,45 @@ class TranscribeApp(App):
         border: round #3a3a5c;
         padding: 1 2;
         margin: 1 2 0 2;
+    }
+
+    #controls {
+        height: 7;
+        background: #12121a;
+        border: round #2a2a3d;
+        padding: 1 1;
+        margin: 1 2 0 2;
+        align: left middle;
+    }
+
+    .control_label {
+        width: auto;
+        content-align: left middle;
+        color: #7aa2f7;
+        margin-right: 1;
+    }
+
+    #model_select {
+        width: 24;
+        margin-right: 2;
+    }
+
+    #device_select {
+        width: 18;
+        margin-right: 2;
+    }
+
+    #load_model_btn {
+        width: 16;
+        content-align: center middle;
+    }
+
+    Select {
+        color: #e5e9f0;
+    }
+
+    Button {
+        color: #e5e9f0;
     }
 
     #transcript_log {
@@ -117,11 +174,29 @@ class TranscribeApp(App):
         super().__init__()
         self.config = config
         self.audio: AudioStream | None = None
+        self.model_loaded = False
+        self.is_loading = False
 
     def compose(self) -> ComposeResult:
         yield Header()
         yield MicIndicator(id="mic")
-        with Vertical():
+        with Vertical(id="body"):
+            with Horizontal(id="controls"):
+                yield Static("Model", classes="control_label")
+                yield Select(
+                    options=[(model, model) for model in SAFE_MODELS],
+                    value=self.config.model if self.config.model in SAFE_MODELS else "base",
+                    allow_blank=False,
+                    id="model_select",
+                )
+                yield Static("Device", classes="control_label")
+                yield Select(
+                    options=[("CPU", "cpu"), ("GPU (CUDA)", "cuda")],
+                    value=self.config.device,
+                    allow_blank=False,
+                    id="device_select",
+                )
+                yield Button("Load Model", id="load_model_btn")
             yield StreamingLine(id="streaming_box")
             yield RichLog(id="transcript_log", highlight=True, markup=True, wrap=True)
         yield Footer()
@@ -132,10 +207,11 @@ class TranscribeApp(App):
         self.sub_title = self.config.summary()
 
         mic = self.query_one("#mic", MicIndicator)
-        mic.state = "loading"
+        mic.state = "idle"
 
         log = self.query_one("#transcript_log", RichLog)
-        log.write(Text.from_markup("[dim]Welcome to Open Transcribe.  Press [bold]R[/bold] to start recording.[/dim]"))
+        log.write(Text.from_markup("[dim]Welcome to Open Transcribe.[/dim]"))
+        log.write(Text.from_markup("[dim]Choose model/device, then press [bold]Load Model[/bold].[/dim]"))
         log.write("")
 
         self.audio = AudioStream(
@@ -145,24 +221,125 @@ class TranscribeApp(App):
             on_error=self._on_error,
         )
 
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "load_model_btn":
+            self._start_model_load()
+
+    def on_select_changed(self, event: Select.Changed) -> None:
+        model_select = self.query_one("#model_select", Select)
+        device_select = self.query_one("#device_select", Select)
+
+        if model_select.is_blank() or device_select.is_blank():
+            return
+
+        selected_model = str(model_select.value)
+        selected_device = str(device_select.value)
+
+        if selected_model in SAFE_MODELS and selected_device in {"cpu", "cuda"}:
+            self.sub_title = (
+                f"model={selected_model}  device={selected_device}  compute={self.config.compute_type}"
+            )
+
+    def _start_model_load(self) -> None:
+        if self.is_loading:
+            return
+
+        model_select = self.query_one("#model_select", Select)
+        device_select = self.query_one("#device_select", Select)
+
+        if model_select.is_blank() or device_select.is_blank():
+            log = self.query_one("#transcript_log", RichLog)
+            log.write(Text.from_markup("[bold red]Select both model and device before loading.[/bold red]"))
+            return
+
+        model = str(model_select.value)
+        device = str(device_select.value)
+
+        if model not in SAFE_MODELS or device not in {"cpu", "cuda"}:
+            log = self.query_one("#transcript_log", RichLog)
+            log.write(Text.from_markup("[bold red]Invalid model or device selection.[/bold red]"))
+            return
+
+        self.config.model = model
+        self.config.device = device
+        self.sub_title = self.config.summary()
+
+        if self.audio is None:
+            self.audio = AudioStream(
+                config=self.config,
+                on_realtime=self._on_realtime,
+                on_final=self._on_final,
+                on_error=self._on_error,
+            )
+        else:
+            self.audio.shutdown()
+
+        mic = self.query_one("#mic", MicIndicator)
+        mic.state = "loading"
+        self.is_loading = True
+        self.model_loaded = False
+        self._set_controls_enabled(False)
+
+        log = self.query_one("#transcript_log", RichLog)
+        log.write(Text.from_markup(
+            f"[dim]Loading model [bold]{self.config.model}[/bold] on [bold]{self.config.device}[/bold]...[/dim]"
+        ))
+
         self._load_model()
+
+    def _set_controls_enabled(self, enabled: bool) -> None:
+        self.query_one("#model_select", Select).disabled = not enabled
+        self.query_one("#device_select", Select).disabled = not enabled
+        self.query_one("#load_model_btn", Button).disabled = not enabled
 
     @work(thread=True)
     def _load_model(self) -> None:
         try:
+            if self.audio is None:
+                raise RuntimeError("Audio stream is not initialized")
             self.audio.initialize()
             self.call_from_thread(self._model_ready)
         except Exception as exc:
+            if self.config.device == "cuda":
+                try:
+                    if self.audio:
+                        self.audio.shutdown()
+                    self.config.device = "cpu"
+                    self.call_from_thread(self._notify_cpu_fallback, str(exc))
+                    if self.audio is None:
+                        raise RuntimeError("Audio stream is not initialized")
+                    self.audio.initialize()
+                    self.call_from_thread(self._model_ready)
+                    return
+                except Exception as fallback_exc:
+                    self.call_from_thread(self._model_failed, f"GPU load failed: {exc} | CPU fallback failed: {fallback_exc}")
+                    return
             self.call_from_thread(self._model_failed, str(exc))
 
     def _model_ready(self) -> None:
+        self.is_loading = False
+        self.model_loaded = True
         mic = self.query_one("#mic", MicIndicator)
         mic.state = "idle"
         log = self.query_one("#transcript_log", RichLog)
-        log.write(Text.from_markup("[green]✓ Model loaded.  Press [bold]R[/bold] to begin.[/green]"))
+        self.sub_title = self.config.summary()
+        self._set_controls_enabled(False)
+        log.write(Text.from_markup(
+            f"[green]✓ Model loaded ([bold]{self.config.model}[/bold] on [bold]{self.config.device}[/bold]). Press [bold]R[/bold] to begin.[/green]"
+        ))
         log.write("")
 
+    def _notify_cpu_fallback(self, err: str) -> None:
+        self.sub_title = self.config.summary()
+        log = self.query_one("#transcript_log", RichLog)
+        log.write(Text.from_markup(
+            f"[bold dark_orange]⚠ GPU unavailable. Falling back to CPU automatically.[/bold dark_orange] [dim]{err}[/dim]"
+        ))
+
     def _model_failed(self, err: str) -> None:
+        self.is_loading = False
+        self.model_loaded = False
+        self._set_controls_enabled(True)
         mic = self.query_one("#mic", MicIndicator)
         mic.state = "error"
         log = self.query_one("#transcript_log", RichLog)
@@ -171,12 +348,21 @@ class TranscribeApp(App):
     # ── Actions ───────────────────────────────────────────────────────
 
     def action_toggle_listening(self) -> None:
+        if not self.model_loaded:
+            log = self.query_one("#transcript_log", RichLog)
+            log.write(Text.from_markup("[dim]Load a model first using [bold]Load Model[/bold].[/dim]"))
+            return
+
         if self.audio is None or self.audio.recorder is None:
             return
 
         mic = self.query_one("#mic", MicIndicator)
 
         if self.audio.is_listening:
+            stream = self.query_one("#streaming_box", StreamingLine)
+            pending_partial = stream.partial.strip()
+            if pending_partial:
+                self._append_final(pending_partial)
             self.audio.stop()
             mic.state = "paused"
         else:

@@ -48,6 +48,9 @@ class AudioStream:
             enable_realtime_transcription=self.config.enable_realtime_transcription,
             on_realtime_transcription_update=self._handle_realtime,
             post_speech_silence_duration=self.config.post_speech_silence_duration,
+            silero_deactivity_detection=True,
+            # min_gap_between_recordings=self.config.min_gap_between_recordings,
+            # min_length_of_recording=self.config.min_length_of_recording,
         )
 
     def start(self) -> None:
@@ -56,6 +59,7 @@ class AudioStream:
             return
         if self.recorder is None:
             self.initialize()
+
         self.is_listening = True
         self._thread = threading.Thread(target=self._loop, daemon=True)
         self._thread.start()
@@ -82,15 +86,24 @@ class AudioStream:
         if text and self.on_realtime:
             self.on_realtime(text)
 
+    def _handle_final(self, text: str) -> None:
+        if text and self.on_final:
+            cleaned_text = text.strip()
+            if cleaned_text:
+                self.on_final(cleaned_text)
+
     def _loop(self) -> None:
         if not self.recorder:
             return
         try:
             while self.is_listening:
                 try:
-                    text = self.recorder.text()
-                    if text and text.strip() and self.on_final:
-                        self.on_final(text.strip())
+                    if self.on_final:
+                        self.recorder.text(self._handle_final)
+                    else:
+                        text = self.recorder.text()
+                        if text and text.strip():
+                            self._handle_final(text)
                 except Exception as exc:
                     if self.on_error:
                         self.on_error(str(exc))

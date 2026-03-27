@@ -1,6 +1,6 @@
 # Open Transcribe
 
-A beautiful, open-source, **CPU-only** real-time speech-to-text app for your terminal - inspired by [Wispr Flow](https://wisprflow.ai).
+A beautiful, open-source real-time speech-to-text app for your terminal - inspired by [Wispr Flow](https://wisprflow.ai).
 
 ```
 ┌─ Open Transcribe ────────────────────────────────────────┐
@@ -20,7 +20,8 @@ A beautiful, open-source, **CPU-only** real-time speech-to-text app for your ter
 
 - **Real-time streaming** - words appear as you speak (like watching an LLM type)
 - **Full transcription** - partial text streams in, then the full sentence locks in when you pause
-- **CPU-only** - no GPU required, runs on any laptop
+- **Runtime model + device selection** - choose model and CPU/GPU at app startup
+- **CPU fallback** - if CUDA load fails, the app automatically falls back to CPU
 - **Cross-platform** - Windows, macOS, Linux
 - **Gorgeous TUI** - dark theme terminal UI built with Textual
 - **Minimal footprint** - ~150 MB model download, low RAM usage
@@ -65,6 +66,14 @@ python src/main.py
 | `C`       | Clear transcript    |
 | `Q`       | Quit                |
 
+On startup, use the top controls to choose:
+- **Model** (from a safe built-in list)
+- **Device** (`CPU` or `GPU (CUDA)`)
+
+Then press **Load Model** before recording.
+
+If `GPU (CUDA)` is selected but unavailable, the app automatically retries on CPU and shows a bold orange status message.
+
 The TUI has two zones:
 - **Top box** — live streaming partial text (updates as you speak)
 - **Bottom log** — finalized, timestamped sentences (appear when you pause for ~1 sec)
@@ -80,7 +89,7 @@ Prints streaming partials and final sentences directly in your terminal. Great f
 ## Architecture
 
 ```
-Mic → RealtimeSTT (VAD + Silero) → faster-whisper (CPU, float32) → Callbacks → TUI
+Mic → RealtimeSTT (VAD + Silero) → faster-whisper (CPU/GPU, float32) → Callbacks → TUI
 ```
 
 | Layer         | Library           |
@@ -97,7 +106,7 @@ Default model: `base` (~150 MB, ~1 GB RAM, great accuracy for English).
 
 | Problem | Fix |
 |---------|-----|
-| `cublas64_12.dll not found` | You're accidentally hitting GPU mode. The app forces `device="cpu"` + `compute_type="float32"` to avoid this. Make sure you're on the latest code. |
+| CUDA / GPU library error (`cublas...`, `libcuda...`) | If GPU loading fails, the app automatically falls back to CPU and logs a warning in orange. |
 | No audio / silent | Check OS microphone privacy settings. On Windows: Settings → Privacy → Microphone → allow Python. |
 | `webrtcvad` install fails | Install Visual Studio C++ Build Tools (Windows) or `build-essential` (Linux). |
 | Model download hangs | First run downloads ~150 MB from Hugging Face. Ensure internet access. Subsequent runs are cached. |

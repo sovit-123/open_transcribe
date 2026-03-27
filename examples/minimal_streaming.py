@@ -23,6 +23,8 @@ def main() -> None:
     print("=" * 55)
 
     config = Config()
+    # config.device = "cpu"
+    # config.post_speech_silence_duration = 0.6
     print(f"  {config.summary()}")
     print("-" * 55)
     print("Initializing model (first run downloads the model)…\n")
