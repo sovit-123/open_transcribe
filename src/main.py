@@ -29,6 +29,7 @@ if _os.name == "posix":
 # ── End workaround ────────────────────────────────────────────────────
 
 import sys
+import argparse
 from pathlib import Path
 
 # Ensure project root is importable when running `python src/main.py`
@@ -39,7 +40,15 @@ from src.ui.app import TranscribeApp
 
 
 def main() -> None:
-    config = Config()
+    parser = argparse.ArgumentParser(description="Open Transcribe")
+    parser.add_argument(
+        "--type-text",
+        action="store_true",
+        help="Type finalized transcription text at the active cursor.",
+    )
+    args = parser.parse_args()
+
+    config = Config(type_text=args.type_text)
     app = TranscribeApp(config)
     app.run()
 

@@ -23,6 +23,7 @@ A beautiful, open-source real-time speech-to-text app for your terminal - inspir
 - **Runtime model + device selection** - choose model and CPU/GPU at app startup
 - **CPU fallback** - if CUDA load fails, the app automatically falls back to CPU
 - **Cross-platform** - Windows, macOS, Linux
+- **Optional type-to-cursor mode** - transcribed text can be typed into the active app
 - **Gorgeous TUI** - dark theme terminal UI built with Textual
 - **Minimal footprint** - ~150 MB model download, low RAM usage
 
@@ -58,6 +59,9 @@ pip install -r requirements.txt
 
 ```bash
 python src/main.py
+
+# Optional: type finalized text into active cursor
+python src/main.py --type-text
 ```
 
 | Key       | Action              |
@@ -85,6 +89,15 @@ python examples/minimal_streaming.py
 ```
 
 Prints streaming partials and final sentences directly in your terminal. Great for debugging or piping output.
+
+### Dictation to active cursor
+
+```bash
+pip install pyautogui
+python examples/type_to_cursor.py
+```
+
+This mode types finalized phrases into whichever window currently has keyboard focus.
 
 ## Architecture
 

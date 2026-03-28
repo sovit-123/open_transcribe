@@ -19,3 +19,6 @@ python-dotenv==1.0.0
 ctranslate2>=3.24.0
 
 requests==2.32.5
+
+# Optional: type finalized text to active cursor
+# pyautogui==0.9.54
