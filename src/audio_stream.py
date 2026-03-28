@@ -8,6 +8,7 @@ from RealtimeSTT import AudioToTextRecorder
 import threading
 
 from src.config import Config
+from src.text_output import CursorTyper, CursorTyperError
 
 
 class AudioStream:
@@ -30,6 +31,7 @@ class AudioStream:
         self.on_final = on_final
         self.on_error = on_error
         self.recorder: Optional[AudioToTextRecorder] = None
+        self.cursor_typer: Optional[CursorTyper] = None
         self.is_listening = False
         self._thread: Optional[threading.Thread] = None
 
@@ -39,6 +41,12 @@ class AudioStream:
 
     def initialize(self) -> None:
         """Create the AudioToTextRecorder.  Heavy (downloads model on first run)."""
+        if self.config.type_text and self.cursor_typer is None:
+            try:
+                self.cursor_typer = CursorTyper(append_space=self.config.type_text_append_space)
+            except CursorTyperError as exc:
+                raise RuntimeError(str(exc)) from exc
+
         self.recorder = AudioToTextRecorder(
             model=self.config.model,
             language=self.config.language,
@@ -87,10 +95,17 @@ class AudioStream:
             self.on_realtime(text)
 
     def _handle_final(self, text: str) -> None:
-        if text and self.on_final:
+        if text:
             cleaned_text = text.strip()
             if cleaned_text:
-                self.on_final(cleaned_text)
+                if self.cursor_typer:
+                    try:
+                        self.cursor_typer.type_text(cleaned_text)
+                    except Exception as exc:
+                        if self.on_error:
+                            self.on_error(f"Type-to-cursor failed: {exc}")
+                if self.on_final:
+                    self.on_final(cleaned_text)
 
     def _loop(self) -> None:
         if not self.recorder:

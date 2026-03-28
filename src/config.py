@@ -26,8 +26,16 @@ class Config:
     enable_realtime_transcription: bool = True
     post_speech_silence_duration: float = 1.0  # seconds of silence before finalizing
 
+    # Optional dictation mode: type finalized text at active cursor
+    type_text: bool = False
+    type_text_append_space: bool = True
+
     # UI
     app_title: str = "Open Transcribe"
 
     def summary(self) -> str:
-        return f"model={self.model}  device={self.device}  compute={self.compute_type}"
+        type_text_mode = "on" if self.type_text else "off"
+        return (
+            f"model={self.model}  device={self.device}  "
+            f"compute={self.compute_type}  type_text={type_text_mode}"
+        )
