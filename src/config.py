@@ -19,7 +19,7 @@ class Config:
     # distil-large-v3, large-v3-turbo, or turbo)
     model: str = "base"
     language: str = "en"
-    device: Literal["cpu", "cuda"] = "cuda"
+    device: Literal["cpu", "cuda"] = "cpu"
     compute_type: str = "float32"
 
     # Realtime STT behaviour
